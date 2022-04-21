@@ -1,0 +1,58 @@
+@model List<Wedding>
+
+@{
+    ViewData["Title"] = "Dashboard";
+    int? loggedInUserId = Context.Session.GetInt32("UserId");
+}
+
+<div class="row justify-content-between align-items-center ml-1 mr-1 mb-2">
+    <h1 class="text-center">Welcome to WeddingPlanner</h1>
+    <a asp-controller="Wedding" asp-action="New">
+        <button class="btn btn-outline-primary">New Wedding</button>
+    </a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Upcoming Weddings</h5>
+        <table class="table table-striped">
+            <tr>
+                <th>Wedders</th>
+                <th>Date</th>
+                <th>Guests</th>
+                <th>Action</th>
+            </tr>
+            @foreach(Wedding wedding in Model)
+            {
+                bool isThisUsersWedding = wedding.UserId == loggedInUserId;
+                bool isRsvped = wedding.Rsvps.Any(rsvp => rsvp.UserId == loggedInUserId);
+                string rsvpButtonText = isRsvped ? "Un-RSVP" : "RSVP";
+                string rsvpButtonColorClass = isRsvped ? "text-warning btn-outline-warning" : "text-success btn-outline-success";
+                <tr>
+                    <td>
+                        <a
+                            asp-controller="Wedding"
+                            asp-action="Details"
+                            asp-route-weddingId="@wedding.WeddingId"
+                        >@wedding.WeddingName</a>
+                    </td>
+                    <td>@wedding.Date.ToShortDateString()</td>
+                    <td>@wedding.Rsvps.Count()</td>
+                    <td>
+                    @if(isThisUsersWedding)
+                    {
+                        <form asp-controller="Wedding" asp-action="Delete" asp-route-weddingId="@wedding.WeddingId" method="post">
+                            <input type="submit" value="Delete" class="btn btn-link text-danger btn-outline-danger">
+                        </form>
+                    }
+                    else
+                    {    
+                        <form asp-controller="Wedding" asp-action="Rsvp" asp-route-weddingId="@wedding.WeddingId" method="post">
+                            <input type="submit" value="@rsvpButtonText" class="btn btn-link @rsvpButtonColorClass">
+                        </form>
+                    }
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
